@@ -79,7 +79,7 @@
             <el-divider />
             <div class="form-section">
               <div class="section-title">
-                <el-icon><Shield /></el-icon>
+                <el-icon><Lock /></el-icon>
                 风险控制
               </div>
               
@@ -401,7 +401,7 @@ import {
   Setting,
   Calendar,
   TrendCharts,
-  Shield,
+  Lock,
   Filter,
   QuestionFilled,
   VideoPlay,
