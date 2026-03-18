@@ -362,7 +362,7 @@
           
           <!-- 空状态 -->
           <div v-if="!hasResults && !backtesting" class="empty-state">
-            <el-empty description="点击左侧"开始回测"按钮运行策略">
+            <el-empty description='点击左侧"开始回测"按钮运行策略'>
               <template #image>
                 <div class="empty-icon">
                   <el-icon :size="80"><DataAnalysis /></el-icon>
