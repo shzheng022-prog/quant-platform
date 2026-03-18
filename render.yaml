@@ -1,0 +1,172 @@
+# Render全栈部署指南
+
+## 准备工作
+
+### 1. 检查项目结构
+确保您的项目包含以下文件：
+
+```
+/Users/zhengsonghao/CodeBuddy/20260317162027/
+├── backend/
+│   ├── app.py              # Flask应用
+│   ├── strategy_adapter.py # 策略适配器
+│   ├── Procfile          # Render启动配置 ✅ 已创建
+│   ├── runtime.txt       # Python版本配置 ✅ 已创建
+│   └── requirements.txt  # Python依赖 ✅ 已更新
+├── frontend/
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── render-build.sh   # 构建脚本 ✅ 已创建
+│   └── src/
+└── requirements.txt      # 根目录依赖
+```
+
+### 2. 验证配置文件
+
+#### 后端配置文件
+
+**backend/Procfile** (已创建)
+```
+web: gunicorn app:app --host 0.0.0.0 --port $PORT --workers 2 --timeout 120
+```
+
+**backend/runtime.txt** (已创建)
+```
+python-3.9.16
+```
+
+**requirements.txt** (已更新，添加了gunicorn)
+```
+Flask==3.0.0
+Flask-CORS==4.0.0
+pandas==2.1.0
+numpy==1.24.3
+akshare>=1.16.72
+scipy==1.11.4
+python-dateutil==2.8.2
+pytz==2023.3
+gunicorn==21.2.0
+```
+
+#### 前端配置文件
+
+**frontend/render-build.sh** (已创建)
+```bash
+#!/bin/bash
+npm install
+npm run build
+```
+
+## 部署步骤
+
+### 方式一：手动部署（推荐用于首次部署）
+
+#### 步骤1：注册Render账号
+1. 访问 https://dashboard.render.com
+2. 点击 "Sign Up" 注册
+3. 使用GitHub账号登录（推荐）
+
+#### 步骤2：部署后端服务
+
+1. 登录后，点击右上角 **"New +"** 按钮
+2. 选择 **"Web Service"**
+3. 连接GitHub仓库
+   - 如果是私有仓库，需要授权
+   - 公开仓库可以直接连接
+4. 配置服务：
+
+**基本信息**
+- **Name**: `quant-platform-backend` (可自定义)
+- **Region**: Singapore 或 Tokyo (选择离您最近的区域)
+
+**构建配置**
+- **Root Directory**: `backend`
+- **Runtime**: `Python`
+- **Build Command**: 留空（自动识别）
+- **Start Command**: `gunicorn app:app --host 0.0.0.0 --port $PORT --workers 2 --timeout 120`
+
+**高级配置**（点击 "Advanced"）
+- **Instance Type**: `Free`
+- **RAM**: `512 MB`
+- **CPU**: `0.1 vCPU`
+
+5. 点击 **"Create Web Service"**
+
+等待部署完成（首次部署需要3-5分钟）。
+
+#### 步骤3：部署前端服务
+
+1. 再次点击 **"New +"**
+2. 选择 **"Static Site"**
+3. 选择同一个GitHub仓库
+4. 配置服务：
+
+**基本信息**
+- **Name**: `quant-platform-frontend`
+- **Region**: 与后端相同的区域
+
+**构建配置**
+- **Root Directory**: `frontend`
+- **Build Command**: `npm install && npm run build`
+- **Publish Directory**: `dist`
+
+**环境变量**（重要）
+点击 "Advanced" → "Add Environment Variable"，添加：
+```
+VITE_API_BASE_URL=https://your-backend-url.onrender.com
+```
+*注意：将 `your-backend-url.onrender.com` 替换为实际的后端URL*
+
+5. 点击 **"Create Static Site"**
+
+等待部署完成（首次部署需要2-3分钟）。
+
+#### 步骤4：配置CORS
+
+由于前端和后端不在同一个域名，需要配置CORS。更新后端代码：
+
+**backend/app.py**
+```python
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+
+app = Flask(__name__)
+# 允许所有来源，生产环境建议指定前端域名
+CORS(app)
+
+# 或指定前端域名
+# CORS(app, origins=["https://your-frontend-url.onrender.com"])
+```
+
+修改后需要重新部署后端服务。
+
+### 方式二：使用render.yaml配置文件（推荐用于自动化部署）
+
+在项目根目录创建 `render.yaml` 文件：<tool_call>write_to_file<arg_key>content</arg_key><arg_value>services:
+  # 后端服务
+  - type: web
+    name: quant-platform-backend
+    env: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r ../requirements.txt
+    startCommand: gunicorn app:app --host 0.0.0.0 --port $PORT --workers 2 --timeout 120
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.16
+    healthCheckPath: /health
+
+  # 前端服务
+  - type: web
+    name: quant-platform-frontend
+    env: static
+    plan: free
+    region: singapore
+    buildCommand: cd frontend && npm install && npm run build
+    publishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: quant-platform-backend
+          property: url

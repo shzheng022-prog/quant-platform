@@ -1,0 +1,13 @@
+# 前端部署配置（Render静态站点）
+
+## 构建输出目录
+dist
+
+## 依赖
+node_modules/
+
+## 日志
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
