@@ -61,7 +61,7 @@
                   :min="5"
                   :max="60"
                   show-stops
-                  :marks="{ 10: '10天', 25: '25天', 40: '40天' }"
+                  :marks="lookbackDaysMarks"
                 />
                 <div class="slider-value">{{ strategyForm.lookbackDays }} 天</div>
               </el-form-item>
@@ -90,7 +90,7 @@
                   :max="1"
                   :step="0.01"
                   :format-tooltip="val => `${(1-val)*100}%`"
-                  :marks="{ 0.9: '10%', 0.95: '5%', 0.97: '3%' }"
+                  :marks="stopLossMarks"
                 />
                 <div class="slider-value">{{ ((1 - strategyForm.stopLoss) * 100).toFixed(1) }}%</div>
               </el-form-item>
@@ -125,7 +125,7 @@
                       v-model="strategyForm.rsiPeriod"
                       :min="2"
                       :max="14"
-                      :marks="{ 6: '6', 10: '10' }"
+                      :marks="rsiPeriodMarks"
                     />
                     <div class="slider-value">{{ strategyForm.rsiPeriod }}</div>
                   </el-form-item>
@@ -135,7 +135,7 @@
                       v-model="strategyForm.rsiThreshold"
                       :min="80"
                       :max="99"
-                      :marks="{ 85: '85', 90: '90', 95: '95' }"
+                      :marks="rsiThresholdMarks"
                     />
                     <div class="slider-value">{{ strategyForm.rsiThreshold }}</div>
                   </el-form-item>
@@ -164,7 +164,7 @@
                       :min="-0.5"
                       :max="0.5"
                       :step="0.01"
-                      :marks="{ -0.2: '-20%', 0: '0%', 0.2: '20%' }"
+                      :marks="shortMomentumMarks"
                     />
                     <div class="slider-value">{{ (strategyForm.shortMomentumThreshold * 100).toFixed(1) }}%</div>
                   </el-form-item>
@@ -428,6 +428,35 @@ const strategyForm = ref({
   useShortMomentum: true,
   shortMomentumThreshold: 0.0
 })
+
+const shortMomentumMarks = {
+  '-0.2': '-20%',
+  '0': '0%',
+  '0.2': '20%'
+}
+
+const lookbackDaysMarks = {
+  '10': '10天',
+  '25': '25天',
+  '40': '40天'
+}
+
+const stopLossMarks = {
+  '0.9': '10%',
+  '0.95': '5%',
+  '0.97': '3%'
+}
+
+const rsiPeriodMarks = {
+  '6': '6',
+  '10': '10'
+}
+
+const rsiThresholdMarks = {
+  '85': '85',
+  '90': '90',
+  '95': '95'
+}
 
 const backtesting = ref(false)
 const hasResults = ref(false)
